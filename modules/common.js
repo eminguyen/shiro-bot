@@ -4,18 +4,20 @@ module.exports = {
 
   // A list of available commands
   commands: [
-    'help',
-
+    'ping',
+    'stats'
   ],
 
   /**
-   *
+   * @name ping
+   * @desc Returns the latency
    */
-  'help': {
-    usage: '~help',
-    description: 'Always at your service nii-chan!',
+  'ping': {
+    usage: '~ping',
+    description: 'Pings the bot for latency',
     method: (client, message, args) => {
-      message.channel.send('help');
+      let ping = new Date().getTime() - message.createdTimestamp;
+      message.channel.send(`pong! | ${ping} ms`);
     }
   },
 
@@ -29,17 +31,6 @@ module.exports = {
       message.channel.send();
     }
   },
-
-  /**
-   * @
-   */
-   'uwu': {
-
-   }
-
-   /**
-    *
-    */
 
 
 }
