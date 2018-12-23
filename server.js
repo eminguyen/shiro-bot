@@ -18,9 +18,11 @@ client.login(token);
 
 // Load commands into a commands map
 client.commands = new Discord.Collection();
+helpList = [];
 const modulesList = fs.readdirSync('./modules');
 for(const file of modulesList) {
   const module = require(`./modules/${file}`);
+  let commandsList = [];
   for(let i = 0; i < module.commands.length; i++) {
     let command = module.commands[i];
 
@@ -30,9 +32,10 @@ for(const file of modulesList) {
         client.commands.set(alias, module[command]);
       }
     }
-    
+    commandsList.push([command, module[command].usage]);
     client.commands.set(command, module[command]);
   }
+  helpList.push([file, commandsList]);
 }
 
 // When the client is ready, set its activity and announce that we've logged in
@@ -74,14 +77,83 @@ let commandCheck = (message) => {
       }
     }
 
+    // Help command
+    if(com == 'help') {
+      let index = 0;
+
+      // Generates the help message
+      let embed = generateHelp(index);
+
+      const filter = (reaction, user) => {
+         return ['👈', '👉', '❌'].includes(reaction.emoji.name) && user.id === message.author.id;
+      };
+
+      // Sends the help message to the channel
+      message.channel.send(embed).then(async (msg) => {
+        await msg.react('👈');
+        await msg.react('👉');
+        await msg.react('❌');
+
+        // Create a collector to collect reactions for one minute
+        const collector = msg.createReactionCollector(filter, { time: 60000 });
+        collector.on('collect', reaction => {
+
+          // Increment index and regenerate the help message
+          if (reaction.emoji.name === '👉') {
+            index += 1;
+            if(index >= helpList.length) index = 0;
+            msg.edit(generateHelp(index));
+            reaction.remove(message.author);
+          }
+
+          // Decrement index and regenerate the help message
+          else if (reaction.emoji.name === '👈') {
+            index -= 1;
+            if(index < 0) index = helpList.length - 1;
+            msg.edit(generateHelp(index));
+            reaction.remove(message.author);
+          }
+
+          // End collecting reactions early
+          else if (reaction.emoji.name === '❌') {
+            collector.stop();
+          }
+        });
+        collector.on('end', reaction => {
+          if(msg) {
+            msg.delete();
+            message.channel.send('I hope I helped nii-chan!');
+          }
+        });
+      });
+    }
+
     // If the command exists, find it in the collection and run it
     if(com) {
       let command = client.commands.get(com);
       if(command) {
         command.method(client, message, args);
       }
-      return;
     }
   }
-  return;
+}
+
+/**
+ * @function generateHelp
+ * @desc Generates a help message from an index in the helpList array
+ * @arg index The index in the helpList array
+ * @return RichEmbed with info on commands
+ */
+let generateHelp = (index) => {
+  let embed = new Discord.RichEmbed();
+  embed.setAuthor('Shiro', client.user.avatarURL);
+
+  let moduleName = helpList[index][0];
+  let commandsList = helpList[index][1];
+
+  embed.setTitle(moduleName.substr(0, moduleName.length-3));
+  for(command of commandsList) {
+    embed.addField(command[0], command[1], true);
+  }
+  return embed;
 }
