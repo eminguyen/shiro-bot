@@ -10,7 +10,8 @@ module.exports = {
   // A list of available commands
   commands: [
     'join',
-    'play'
+    'play',
+    'skip'
   ],
 
   // A description of this module
@@ -27,7 +28,9 @@ module.exports = {
     usage: '~join',
     description: 'Let me join your voice channel!',
     method: (client, message, args) => {
-      joinChannel(message);
+      if(joinChannel(message)) {
+        message.reply('I followed you');
+      };
     }
   },
 
@@ -50,6 +53,22 @@ module.exports = {
       server.queue.push(args[0]);
       joinChannel(message, server, true);
     }
+  },
+
+  /**
+   * @name skip
+   * @desc Skips the current song
+   */
+  'skip': {
+    usage: '~skip',
+    description: 'Skip the current song',
+    method: (client, message, args) => {
+      let server = servers[message.guild.id];
+
+      if(server.dispatcher) {
+        server.dispatcher.end();
+      }
+    }
   }
 
 }
@@ -58,6 +77,7 @@ module.exports = {
  * @function join
  * @desc Gets the bot the join the current channel
  * @arg message The message triggering to join the channel
+ * @arg server The server with the current music queue
  * @arg play Boolean to decide whether or not to play music
  * @return Returns a boolean indicating whether user is in a voice channel
  */
@@ -72,7 +92,6 @@ let joinChannel = (message, server, play) => {
     }
     else {
       message.member.voiceChannel.join();
-      message.reply('I followed you');
     }
     return true;
   }
