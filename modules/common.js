@@ -184,7 +184,7 @@ module.exports = {
             },
             {
               name: "Commands",
-              value: client.commands.size
+              value: Object.keys(client.commands).length
             }
           ],
           timestamp: new Date(),
