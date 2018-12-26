@@ -1,0 +1,30 @@
+{
+  "name": "shiro",
+  "version": "1.0.0",
+  "description": "A bot for Discord!",
+  "main": "server.js",
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "fs": "^0.0.1-security",
+    "express-handlebars": "^3.0.0",
+    "opusscript": "^0.0.6",
+    "simple-youtube-api": "^5.1.1",
+    "express": "^4.16.4",
+    "ytdl-core": "^0.28.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eminguyen/shiro-bot.git"
+  },
+  "author": "Emily Nguyen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eminguyen/shiro-bot/issues"
+  },
+  "homepage": "https://github.com/eminguyen/shiro-bot#readme"
+}

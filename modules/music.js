@@ -5,7 +5,7 @@
 
 const YTDL = require('ytdl-core');
 const Youtube = require('simple-youtube-api');
-const youtube = new Youtube(global.config.youtube);
+const youtube = new Youtube(global.config.youtube || process.env.YOUTUBE);
 
 module.exports = {
 
