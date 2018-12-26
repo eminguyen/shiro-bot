@@ -3,21 +3,53 @@
  * @author Emily Nguyen
  */
 
+// Global Variables
+global.servers = {};
+global.config = require('./config.json');
+
 // Import modules
-const Discord = require('discord.js');
+global.Discord = require('discord.js');
+const express = require('express');
+const exphbs  = require('express-handlebars');
 const fs = require('fs');
-const config = require('./config.json');
+
+// Front End
+const app = express();
+app.engine('handlebars', exphbs({defaultLayout: 'main'}));
+app.set('view engine', 'handlebars');
+
+const port = process.env.PORT || 3000;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Listening on Port ${port}`);
+});
+
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  stats = {
+    commands: client.commands,
+    invite  : `https://discordapp.com/oauth2/authorize?client_id=${client.user.id}&scope=bot`,
+    prefix  : config.prefix,
+    servers : client.guilds.size,
+    users   : client.users.size,
+    uptime  : Math.floor(client.uptime / 86400000) + ' days ' +
+              Math.floor(client.uptime / 3600000) % 24 + 'hours' +
+              Math.floor(client.uptime / 60000) % 60 + ' min',
+  }
+  res.render('home', stats);
+});
 
 // Retrieve bot settings
-const token = process.env.API_KEY || config.token;
-const prefix = config.prefix;
+const token = process.env.API_KEY || global.config.token;
+const prefix = global.config.prefix;
 
 // Declare a client object
-const client = new Discord.Client();
+const client = new global.Discord.Client();
 client.login(token);
 
 // Load commands into a commands map
-client.commands = new Discord.Collection();
+client.commands = {};
+client.aliases = {};
 client.helpList = [];
 const modulesList = fs.readdirSync('./modules');
 for(const file of modulesList) {
@@ -29,11 +61,11 @@ for(const file of modulesList) {
     // Check for aliases
     if(module[command].aliases) {
       for(let alias of module[command].aliases) {
-        client.commands.set(alias, module[command]);
+        client.aliases[alias] = module[command];
       }
     }
     commandsList.push([command, module[command].usage]);
-    client.commands.set(command, module[command]);
+    client.commands[command] = module[command];
   }
   client.helpList.push([file, commandsList, module.description, module.thumbnail]);
 }
@@ -41,7 +73,7 @@ for(const file of modulesList) {
 // When the client is ready, set its activity and announce that we've logged in
 client.on('ready', () => {
   console.log(`Logging in as ${client.user.tag}!`);
-  client.user.setActivity(config.activity);
+  client.user.setActivity(global.config.activity);
 });
 
 // When the client receives a message, match the message with a command
@@ -75,14 +107,9 @@ let commandCheck = (message) => {
       }
     }
 
-    // Help command
-    if(com == 'help') {
-      args = Discord;
-    }
-
     // If the command exists, find it in the collection and run it
     if(com) {
-      let command = client.commands.get(com);
+      let command = client.commands[com] || client.aliases[com];
       if(command) {
         command.method(client, message, args);
       }

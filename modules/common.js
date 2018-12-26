@@ -1,4 +1,7 @@
-
+/**
+ * @file Module for common commands
+ * @author Emily Nguyen
+ */
 
 module.exports = {
 
@@ -12,6 +15,12 @@ module.exports = {
     'ping',
     'stats'
   ],
+
+  // A description of this module
+  description: 'Here are the essentials.',
+
+  // An image representing this module
+  thumbnail: 'https://i.ytimg.com/vi/rnV6A0ywuG8/hqdefault.jpg',
 
   /**
    * @name avatar
@@ -55,7 +64,7 @@ module.exports = {
   'echo': {
     usage: '~echo [message]',
     description: 'Shiro will repeat after you!',
-    method: (client, message, argument) => {
+    method: (client, message, args) => {
       if(!args[0]) {
         message.channel.send('Did you want me to say something?');
       }
@@ -71,12 +80,12 @@ module.exports = {
    */
   'help': {
     usage: '~help',
-    description: "I'm here to help, Nii-chan!",
-    method: (client, message, discord) => {
+    description: "I'm here to help!",
+    method: (client, message, args) => {
       let index = 0;
 
       // Generates the help message
-      let embed = generateHelp(client, index, discord);
+      let embed = generateHelp(client, index);
 
       const filter = (reaction, user) => {
          return ['👈', '👉', '❌'].includes(reaction.emoji.name) && user.id === message.author.id;
@@ -96,7 +105,7 @@ module.exports = {
           if (reaction.emoji.name === '👉') {
             index += 1;
             if(index >= client.helpList.length) index = 0;
-            msg.edit(generateHelp(client, index, discord));
+            msg.edit(generateHelp(client, index));
             reaction.remove(message.author);
           }
 
@@ -104,7 +113,7 @@ module.exports = {
           else if (reaction.emoji.name === '👈') {
             index -= 1;
             if(index < 0) index = client.helpList.length - 1;
-            msg.edit(generateHelp(client, index, discord));
+            msg.edit(generateHelp(client, index));
             reaction.remove(message.author);
           }
 
@@ -116,7 +125,7 @@ module.exports = {
         collector.on('end', reaction => {
           if(msg) {
             msg.delete();
-            message.channel.send('I hope I helped Nii-chan!');
+            message.channel.send('I hope I helped.');
           }
         });
       });
@@ -185,23 +194,23 @@ module.exports = {
         }
       });
     }
-  },
-
+  }
 
 }
 
 /**
  * @function generateHelp
  * @desc Generates a help message from an index in the helpList array
+ * @arg client The bot client
  * @arg index The index in the helpList array
  * @return RichEmbed with info on commands
  */
-let generateHelp = (client, index, discord) => {
-  let embed = new discord.RichEmbed();
+let generateHelp = (client, index) => {
+  let embed = new global.Discord.RichEmbed();
   embed.setAuthor('Shiro', client.user.avatarURL)
   .setColor(3447003)
   .setTimestamp()
-  .setFooter('© eminguyen');
+  .setFooter(`React to change pages! ${index+1}/${client.helpList.length}`);
 
   let moduleName = client.helpList[index][0];
   let commandsList = client.helpList[index][1];

@@ -14,6 +14,12 @@ module.exports = {
     'uwu'
   ],
 
+  // A description of this module
+  description: 'Come play with Blank!',
+
+  // An image representing this module
+  thumbnail: 'https://i.ytimg.com/vi/rnV6A0ywuG8/hqdefault.jpg',
+
   /**
    * @name 8ball
    * @desc Returns a fortune!
@@ -23,17 +29,17 @@ module.exports = {
     description: 'I can read the future',
     method: (client, message, args) => {
       if (args.length == 0) {
-        message.channel.send('You need to ask me a question nii-chan!');
+        message.channel.send('You need to ask me a question.');
         return;
       }
       let eightball = [
-        'Yes nii-chan!',
+        'Yes Nii-chan.',
         'Yes.',
         'No baka.',
         'No.',
         'Maybe.',
       ];
-      let index = (Math.floor(Math.random() * Math.floor(eightball.length)));
+      let index = Math.floor(Math.random() * Math.floor(eightball.length));
       message.channel.send(eightball[index]);
     }
   },
@@ -46,7 +52,7 @@ module.exports = {
     usage: "coinflip",
     description: "Returns heads or tails!",
     method: (client, message, args) => {
-      let random = (Math.floor(Math.random() * Math.floor(2)));
+      let random = Math.floor(Math.random() * Math.floor(2));
       if(random === 0) {
         message.channel.send("I flipped heads!");
       }
@@ -64,7 +70,7 @@ module.exports = {
     usage: '~diceroll [*Number]',
     description: 'Helps you play more games',
     method: (client, message, args) => {
-
+      let number;
       // No number selected, default to 6
       if(args.length == 0) {
         number = 6;
@@ -74,7 +80,7 @@ module.exports = {
       }
 
       // Randomly selects a number in the range and returns it
-      let result = (Math.floor(Math.random() * Math.floor(number)));
+      let result = Math.floor(Math.random() * Math.floor(number));
       if(!result) {
         message.channel.send('Is that even a number, baka?');
         return;
@@ -128,6 +134,6 @@ module.exports = {
       let options = ['UwU', 'uwu', '☆w☆', '✧w✧', '♥w♥', 'owo', '⓪w⓪', 'OwO', '@w@','◔w◔'];
       message.channel.send(options[Math.floor(Math.random()*options.length)]);
     }
-  },
+  }
 
 }
