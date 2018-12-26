@@ -15,6 +15,8 @@ module.exports = {
     'delete',
     'disconnect',
     'join',
+    'next',
+    'pause',
     'play',
     'queue',
     'shuffle',
@@ -28,8 +30,8 @@ module.exports = {
   thumbnail: 'https://i.ytimg.com/vi/rnV6A0ywuG8/hqdefault.jpg',
 
   /**
-   * @name disconnect
-   * @desc Disconnect from the channel
+   * @name clear
+   * @desc Clears the song queue
    */
   'clear': {
     usage: '~clear',
@@ -63,7 +65,7 @@ module.exports = {
         return;
       }
       let embed = viewQueue(server, client);
-      embed.setDescription('Reply with a number to delete a song from the queue');
+      embed.setFooter('Reply with a number!');
       message.channel.send(embed);
       const collector = new Discord.MessageCollector(message.channel, m => m.author.id === message.author.id, { time: 10000 });
       collector.on('collect', msg => {
@@ -74,7 +76,7 @@ module.exports = {
           collector.stop();
         }
         else {
-          message.channel.send("❌ Can't delete that, Nii-chan");
+          message.channel.send("❌ Can't delete that, Nii-chan.");
           collector.stop();
         }
       });
@@ -109,6 +111,77 @@ module.exports = {
       if(joinChannel(message)) {
         message.reply(`I followed you!`);
       };
+    }
+  },
+
+  /**
+   * @name next
+   * @desc Moves a song to be next in queue
+   */
+  'next': {
+    usage: '~next',
+    description: 'Moves a song to be next in queue',
+    method: (client, message, args) => {
+      let server = servers[message.guild.id];
+      if(!server || !server.queue || server.queue.length == 0) {
+        message.channel.send({embed: {
+          color: 3447003,
+          description: '❌ Queue is empty'
+        }});
+        return;
+      }
+      let embed = viewQueue(server, client);
+      embed.setFooter('Reply with a number!');
+      message.channel.send(embed);
+      const collector = new Discord.MessageCollector(message.channel, m => m.author.id === message.author.id, { time: 10000 });
+      collector.on('collect', msg => {
+        if (msg.content > 0 && msg.content <= server.queue.length) {
+          let index = parseInt(msg.content) - 1;
+          message.channel.send(`☝️ Moving song to the front ${server.queue[index][0]}`);
+          server.queue.unshift(server.queue.splice(index, 1)[0]);
+          collector.stop();
+        }
+        else {
+          message.channel.send("❌ Can't move that, Nii-chan.");
+          collector.stop();
+        }
+      });
+    }
+  },
+
+  /**
+   * @name pause
+   * @desc Pauses the bot
+   */
+  'pause': {
+    usage: '~pause',
+    description: 'Pause / resume the current song',
+    aliases: ['resume'],
+    method: (client, message, args) => {
+      let server = servers[message.guild.id];
+
+      if(server.dispatcher) {
+        if(server.dispatcher.paused) {
+          server.dispatcher.resume();
+          message.channel.send({embed: {
+            color: 3447003,
+            description: '▶️ Resuming music'
+          }});
+        }
+        else {
+          server.dispatcher.pause();
+          message.channel.send({embed: {
+            color: 3447003,
+            description: '⏸ Pausing music'
+          }});
+        }
+      }
+      else {
+        message.channel.send({embed: {
+          color: 3447003,
+          description: "❌ There's no music playing"
+        }});
+      }
     }
   },
 
@@ -185,9 +258,9 @@ module.exports = {
             embed.setAuthor('Shiro', client.user.avatarURL)
             .setColor(3447003)
             .setTimestamp()
-            .setFooter(`Search by ${message.author.username}`)
+            .setFooter('React to select a song!')
             .setTitle(`🎵 Search Results for ${songUrl}`)
-            .setDescription('React to select a song!');
+            .setDescription(`Search by ${message.author.username}`);
             for(let i = 1; i <= results.length; i++) {
               let result = results[i - 1];
               embed.addField(`${i} | ${result.title}`, result.url);
@@ -346,7 +419,7 @@ let playSong = async (connection, message) => {
   server.dispatcher = connection.playStream(YTDL(server.queue[index][1], {filter: 'audioonly'}));
   message.channel.send({embed: {
     color: 3447003,
-    description: `🎵 Now playing ${server.queue[index][0]}`
+    description: `🎵 Now playing [${server.queue[index][0]}](${server.queue[index][1]})`
   }});
   server.queue.splice(index, 1);
   server.dispatcher.on('end', () => {
