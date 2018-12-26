@@ -11,6 +11,7 @@ module.exports = {
 
   // A list of available commands
   commands: [
+    'clear',
     'delete',
     'disconnect',
     'join',
@@ -25,6 +26,25 @@ module.exports = {
 
   // An image representing this module
   thumbnail: 'https://i.ytimg.com/vi/rnV6A0ywuG8/hqdefault.jpg',
+
+  /**
+   * @name disconnect
+   * @desc Disconnect from the channel
+   */
+  'clear': {
+    usage: '~clear',
+    description: 'Clears the song queue',
+    method: (client, message, args) => {
+      let server = servers[message.guild.id];
+      if(server.queue) {
+        server.queue = [];
+      }
+      message.channel.send({embed: {
+        color: 3447003,
+        description: '🗑️ Emptied the queue'
+      }});
+    }
+  },
 
   /**
    * @name delete
