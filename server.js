@@ -45,7 +45,6 @@ const prefix = global.config.prefix;
 
 // Declare a client object
 const client = new global.Discord.Client();
-client.login(token);
 
 // Load commands into a commands map
 client.commands = {};
@@ -80,6 +79,8 @@ client.on('ready', () => {
 client.on('message', (message) => {
   commandCheck(message);
 });
+
+client.login(token);
 
 /**
  * @function commandCheck
