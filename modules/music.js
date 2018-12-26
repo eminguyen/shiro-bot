@@ -4,6 +4,8 @@
  */
 
 const YTDL = require('ytdl-core');
+const Youtube = require('simple-youtube-api');
+const youtube = new Youtube(global.config.youtube);
 
 module.exports = {
 
@@ -11,6 +13,7 @@ module.exports = {
   commands: [
     'join',
     'play',
+    'queue',
     'skip'
   ],
 
@@ -41,7 +44,7 @@ module.exports = {
   'play': {
     usage: '~play [song name]',
     description: 'I sing for you!',
-    method: (client, message, args) => {
+    method: async (client, message, args) => {
       if (args.length == 0) {
         message.channel.send('Give me a song name.');
         return;
@@ -50,10 +53,112 @@ module.exports = {
         servers[message.guild.id] = {queue: []}
       }
       let server = servers[message.guild.id];
-      server.queue.push(args[0]);
+      let songUrl = args[0];
+
+      // If the string is a playlist, add all the songs to the queue
+      if(songUrl.includes('www.youtube.com/playlist')) {
+        await youtube.getPlaylist(songUrl)
+          .then(playlist => {
+            message.channel.send({embed: {
+              color: 3447003,
+              description: `Queueing up songs from ${playlist.title}`
+            }});
+            playlist.getVideos()
+              .then(videos => {
+                for(video of videos) {
+                  server.queue.push([video.title, video.url]);
+                }
+              });
+          });
+      }
+
+      // If string is a Youtube link, add to the queue
+      else if(songUrl.includes('www.youtube.com')) {
+        await youtube.getVideo(songUrl)
+          .then(video => {
+            message.channel.send({embed: {
+              color: 3447003,
+              description: `Queueing up ${video.title}`
+            }});
+            server.queue.push([video.title, video.url]);
+          })
+          .catch(console.error);
+      }
+
+      // Search Youtube for a list of songs
+      else {
+        await youtube.searchVideos(songUrl, 3)
+          .then(async results => {
+            let embed = new global.Discord.RichEmbed();
+            embed.setAuthor('Shiro', client.user.avatarURL)
+            .setColor(3447003)
+            .setTimestamp()
+            .setFooter('© eminguyen')
+            .setTitle(`Here are the search results for ${songUrl}`)
+            .setDescription('React to select a song!');
+            for(let i = 1; i <= results.length; i++) {
+              let result = results[i - 1];
+              embed.addField(`${i} | ${result.title}`, result.url);
+            }
+            let filter = (reaction, user) => {
+                return ['1⃣', '2⃣', '3⃣'].includes(reaction.emoji.name) && user.id === message.author.id;
+            };
+
+            await message.channel.send(embed).then(async (msg) => {
+              await msg.react('1⃣');
+              await msg.react('2⃣');
+              await msg.react('3⃣');
+              await msg.react('❌');
+
+              await msg.awaitReactions(filter, { max: 1, time: 60000, errors: ['time'] })
+                .then(collected => {
+                  const reaction = collected.first();
+                  let video;
+
+                  if (reaction.emoji.name === '1⃣') {
+                    video = results[0];
+                  }
+                  else if (reaction.emoji.name === '2⃣') {
+                    video = results[1];
+                  }
+                  else if (reaction.emoji.name === '3⃣') {
+                    video = results[2];
+                  }
+                  else {
+                    msg.edit({embed: {
+                      color: 3447003,
+                      description: `No song selected!`
+                    }});
+                    msg.clearReactions();
+                    return;
+                  }
+                  msg.edit({embed: {
+                    color: 3447003,
+                    description: `Queueing up ${video.title}`
+                  }});
+                  server.queue.push([video.title, video.url]);
+                  msg.clearReactions();
+                });
+            });
+          });
+      }
       joinChannel(message, server, true);
     }
   },
+
+  /**
+   * @name queue
+   * @desc View the current queue
+   */
+   'queue': {
+     usage: '~queue',
+     description: 'View the current queue of songs',
+     method: (client, message, args) => {
+       let server = servers[message.guild.id];
+
+       console.log(server.queue);
+     }
+   },
 
   /**
    * @name skip
@@ -84,7 +189,7 @@ module.exports = {
 let joinChannel = (message, server, play) => {
   // Check if the message came from some one in a voice channel
   if(message.member.voiceChannel) {
-    if(play && !server.dispatcher) {
+    if(play && (!server.dispatcher || server.dispatcher.destroyed)) {
       message.member.voiceChannel.join()
         .then((connection) => {
           playSong(connection, message);
@@ -108,14 +213,15 @@ let joinChannel = (message, server, play) => {
  */
  let playSong = async (connection, message) => {
    let server = servers[message.guild.id];
-   server.dispatcher = connection.playStream(YTDL(server.queue[0], {filter: 'audioonly'}));
+   server.dispatcher = connection.playStream(YTDL(server.queue[0][1], {filter: 'audioonly'}));
    server.queue.shift();
    server.dispatcher.on('end', () => {
      if(server.queue[0]) {
        playSong(connection, message);
      }
      else {
+       server.dispatcher.destroy();
        connection.disconnect();
      }
-   })
+   });
  }
