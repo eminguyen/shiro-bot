@@ -12,6 +12,7 @@ module.exports = {
   // A list of available commands
   commands: [
     'delete',
+    'disconnect',
     'join',
     'play',
     'queue',
@@ -61,6 +62,23 @@ module.exports = {
   },
 
   /**
+   * @name disconnect
+   * @desc Disconnect from the channel
+   */
+  'disconnect': {
+    usage: '~disconnect',
+    description: 'Disconnect from the current channel',
+    method: (client, message, args) => {
+      if(message.guild.voiceConnection) {
+        message.guild.voiceConnection.disconnect();
+      }
+      else {
+        message.reply("I'm not even in a voice channel, Nii-chan.");
+      }
+    }
+  },
+
+  /**
    * @name join
    * @desc Joins a voice channel with the user
    */
@@ -69,10 +87,7 @@ module.exports = {
     description: 'Let me join your voice channel!',
     method: (client, message, args) => {
       if(joinChannel(message)) {
-        message.channel.send({embed: {
-          color: 3447003,
-          description: `💙 I followed ${message.author.username}`
-        }});
+        message.reply(`I followed you!`);
       };
     }
   },
@@ -309,6 +324,10 @@ let playSong = async (connection, message) => {
     index = Math.floor(Math.random() * Math.floor(server.queue.length));
   }
   server.dispatcher = connection.playStream(YTDL(server.queue[index][1], {filter: 'audioonly'}));
+  message.channel.send({embed: {
+    color: 3447003,
+    description: `🎵 Now playing ${server.queue[index][0]}`
+  }});
   server.queue.splice(index, 1);
   server.dispatcher.on('end', () => {
     if(server.queue[0]) {
