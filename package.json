@@ -5,11 +5,11 @@
   "main": "server.js",
   "dependencies": {
     "discord.js": "^11.4.2",
-    "fs": "^0.0.1-security",
+    "express": "^4.16.4",
     "express-handlebars": "^3.0.0",
+    "fs": "^0.0.1-security",
     "opusscript": "^0.0.6",
     "simple-youtube-api": "^5.1.1",
-    "express": "^4.16.4",
     "ytdl-core": "^0.28.3"
   },
   "devDependencies": {},
