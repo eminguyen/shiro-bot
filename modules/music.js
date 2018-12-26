@@ -15,6 +15,7 @@ module.exports = {
     'join',
     'play',
     'queue',
+    'shuffle',
     'skip'
   ],
 
@@ -89,7 +90,7 @@ module.exports = {
         return;
       }
       if(!servers[message.guild.id]) {
-        servers[message.guild.id] = {queue: []}
+        servers[message.guild.id] = {queue: [], shuffle: false}
       }
       let server = servers[message.guild.id];
       let songUrl = args.join(' ');
@@ -157,7 +158,7 @@ module.exports = {
               embed.addField(`${i} | ${result.title}`, result.url);
             }
             let filter = (reaction, user) => {
-                return ['1⃣', '2⃣', '3⃣'].includes(reaction.emoji.name) && user.id === message.author.id;
+                return ['1⃣', '2⃣', '3⃣', '❌'].includes(reaction.emoji.name) && user.id === message.author.id;
             };
 
             await message.channel.send(embed).then(async (msg) => {
@@ -231,6 +232,26 @@ module.exports = {
    },
 
   /**
+   * @name shuffle
+   * @desc Triggers shuffle
+   */
+   'shuffle': {
+     usage: '~shuffle',
+     description: 'Triggers shuffle',
+     method: (client, message, args) => {
+       if(!servers[message.guild.id]) {
+         servers[message.guild.id] = {queue: [], shuffle: false}
+       }
+       let server = servers[message.guild.id];
+       server.shuffle = !server.shuffle;
+       message.channel.send({embed: {
+         color: 3447003,
+         description: `💥 Setting shuffle to ${server.shuffle}`
+       }});
+     }
+   },
+
+  /**
    * @name skip
    * @desc Skips the current song
    */
@@ -283,8 +304,12 @@ let joinChannel = (message, server, play) => {
  */
 let playSong = async (connection, message) => {
   let server = servers[message.guild.id];
-  server.dispatcher = connection.playStream(YTDL(server.queue[0][1], {filter: 'audioonly'}));
-  server.queue.shift();
+  let index = 0;
+  if(server.shuffle) {
+    index = Math.floor(Math.random() * Math.floor(server.queue.length));
+  }
+  server.dispatcher = connection.playStream(YTDL(server.queue[index][1], {filter: 'audioonly'}));
+  server.queue.splice(index, 1);
   server.dispatcher.on('end', () => {
     if(server.queue[0]) {
       playSong(connection, message);
