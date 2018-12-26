@@ -60,8 +60,12 @@ module.exports = {
         await youtube.getPlaylist(songUrl)
           .then(playlist => {
             message.channel.send({embed: {
+              author: {
+                name: 'Shiro',
+                icon_url: client.user.avatarURL
+              },
               color: 3447003,
-              description: `Queueing up songs from ${playlist.title}`
+              description: `🎵 Queueing up songs from [${playlist.title}](${playlist.url})`
             }});
             playlist.getVideos()
               .then(videos => {
@@ -77,8 +81,12 @@ module.exports = {
         await youtube.getVideo(songUrl)
           .then(video => {
             message.channel.send({embed: {
+              author: {
+                name: 'Shiro',
+                icon_url: client.user.avatarURL
+              },
               color: 3447003,
-              description: `Queueing up ${video.title}`
+              description: `🎵 Queueing up [${video.title}](${video.url})`
             }});
             server.queue.push([video.title, video.url]);
           })
@@ -93,7 +101,7 @@ module.exports = {
             embed.setAuthor('Shiro', client.user.avatarURL)
             .setColor(3447003)
             .setTimestamp()
-            .setFooter('© eminguyen')
+            .setFooter(`Search by ${message.author}`)
             .setTitle(`Here are the search results for ${songUrl}`)
             .setDescription('React to select a song!');
             for(let i = 1; i <= results.length; i++) {
@@ -126,6 +134,10 @@ module.exports = {
                   }
                   else {
                     msg.edit({embed: {
+                      author: {
+                        name: 'Shiro',
+                        icon_url: client.user.avatarURL
+                      },
                       color: 3447003,
                       description: `No song selected!`
                     }});
@@ -133,8 +145,12 @@ module.exports = {
                     return;
                   }
                   msg.edit({embed: {
+                    author: {
+                      name: 'Shiro',
+                      icon_url: client.user.avatarURL
+                    },
                     color: 3447003,
-                    description: `Queueing up ${video.title}`
+                    description: `🎵 Queueing up [${video.title}](${video.url})`
                   }});
                   server.queue.push([video.title, video.url]);
                   msg.clearReactions();
