@@ -109,7 +109,7 @@ module.exports = {
     description: 'Let me join your voice channel!',
     method: (client, message, args) => {
       if(joinChannel(message)) {
-        message.reply(`I followed you!`);
+        message.reply('I followed you!');
       };
     }
   },

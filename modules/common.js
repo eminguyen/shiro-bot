@@ -98,7 +98,7 @@ module.exports = {
         await msg.react('❌');
 
         // Create a collector to collect reactions for one minute
-        const collector = msg.createReactionCollector(filter, { time: 60000 });
+        const collector = msg.createReactionCollector(filter, { time: 180000 });
         collector.on('collect', reaction => {
 
           // Increment index and regenerate the help message
