@@ -3,6 +3,10 @@
  * @author Emily Nguyen
  */
 
+// Override bug in YTLD core
+const m3u8stream = require('m3u8stream');
+const parseTime   = require('m3u8stream/dist/parse-time');
+
 const YTDL = require('ytdl-core');
 const Youtube = require('simple-youtube-api');
 const youtube = new Youtube(global.config.youtube || process.env.YOUTUBE);
